@@ -1,6 +1,7 @@
 // $Id: cxi.cpp,v 1.1 2020-11-22 16:51:43-08 - - $
 
 #include <iostream>
+#include <sstream>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -22,6 +23,7 @@ unordered_map<string,cxi_command> command_map {
    {"exit", cxi_command::EXIT},
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
+   {"rm"  , cxi_command::RM  },
 };
 
 static const char help[] = R"||(
@@ -57,7 +59,6 @@ void cxi_ls (client_socket& server) {
    }
 }
 
-
 void usage() {
    cerr << "Usage: " << outlog.execname() << " [host] [port]" << endl;
    throw cxi_exit();
@@ -79,8 +80,17 @@ int main (int argc, char** argv) {
          string line;
          getline (cin, line);
          if (cin.eof()) throw cxi_exit();
-         outlog << "command " << line << endl;
-         const auto& itor = command_map.find (line);
+
+         vector<std::string> result;
+         istringstream iss(line);
+         cout << "command :";
+         for(std::string s; iss >> s;) {
+            result.push_back(s);
+            cout << " " << s;
+         }
+         cout << endl;
+
+         const auto& itor = command_map.find (result[0]);
          cxi_command cmd = itor == command_map.end()
                          ? cxi_command::ERROR : itor->second;
          switch (cmd) {
@@ -92,6 +102,9 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::LS:
                cxi_ls (server);
+               break;
+            case cxi_command::RM:
+               cxi_rm (server, result[1]);
                break;
             default:
                outlog << line << ": invalid command" << endl;

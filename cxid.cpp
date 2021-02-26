@@ -47,7 +47,22 @@ void reply_ls (accepted_socket& client_sock, cxi_header& header) {
    outlog << "sent " << ls_output.size() << " bytes" << endl;
 }
 
-
+void reply_rm (accepted_socket& client_sock, cxi_header& header) {
+
+   if (unlink(header.filename) < 0) {
+      outlog << "rm " << header.filename << ": " << strerror (errno) << endl;
+      header.command = cxi_command::NAK;
+      header.nbytes = htonl (errno);
+      send_packet (client_sock, &header, sizeof header);
+      return;
+   }
+   header.command = cxi_command::ACK;
+   header.nbytes = 0;
+   outlog << "sending header " << header << endl;
+   send_packet (client_sock, &header, sizeof header);
+   outlog << "header sent " << endl;
+}
+
 void run_server (accepted_socket& client_sock) {
    outlog.execname (outlog.execname() + "*");
    outlog << "connected to " << to_string (client_sock) << endl;
@@ -59,6 +74,9 @@ void run_server (accepted_socket& client_sock) {
          switch (header.command) {
             case cxi_command::LS: 
                reply_ls (client_sock, header);
+               break;
+            case cxi_command::RM:
+               reply_rm (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;

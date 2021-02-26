@@ -59,6 +59,27 @@ void cxi_ls (client_socket& server) {
    }
 }
 
+void cxi_rm (client_socket& server, string& filename) {
+   cxi_header header;
+   header.command = cxi_command::RM;
+   strcpy(header.filename, filename.c_str());
+   //for (uint i = filename.length();i!= FILENAME_SIZE - 1;++i) header.filename[i] = 0;
+   //header.filename[FILENAME_SIZE] = '\0';
+   outlog << "sending header " << header << endl;
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   outlog << "received header " << header << endl;
+   if (header.command != cxi_command::ACK) {
+      outlog << "sent RM, server did not return ACK" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      outlog << "foo was deleted by server" << endl;
+   }
+}
+
+
+
+
 void usage() {
    cerr << "Usage: " << outlog.execname() << " [host] [port]" << endl;
    throw cxi_exit();

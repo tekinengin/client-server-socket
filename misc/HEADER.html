@@ -1,0 +1,44 @@
+<HEAD>
+<TITLE>~cse111-wm/Assignments/asg4-client-server/misc</TITLE>
+<SCRIPT>
+function clock() {
+   var date = new Date();
+   var time = date.toLocaleTimeString().replace (/:\d\d\s/, " ");
+   document.getElementById("clock").innerHTML = time;
+   setTimeout (clock, 10 * 1000);
+}
+setTimeout (clock, 1);
+</SCRIPT>
+<STYLE>
+BODY {
+   font-size: 1em;
+   font-family: monospace;
+   color: #40FF40 !important;
+   background-color: #000000 !important;
+}
+DIV.CLOCK {
+   font-size: 1.44em;
+   margin-right: 1ch;
+   text-align: right;
+   font-weight: bold;
+   padding-top: 0.5ex;
+}
+DIV.PWD_URL {
+   font-size: 1em;
+   margin-left: 0;
+   font-weight: bold;
+}
+A:link {color: #FFFF00}
+A:visited {color: #00FFFF}
+A:hover {color: #FF0000}
+</STYLE>
+</HEAD>
+<BODY>
+<DIV class="CLOCK">
+<SPAN id="clock">&nbsp;</SPAN>
+</DIV>
+<DIV class="PWD_URL">
+<BR>PWD: /afs/cats.ucsc.edu/courses/cse111-wm/Assignments/asg4-client-server/misc
+<BR>URL: <A HREF=https://www2.ucsc.edu/courses/cse111-wm/:/Assignments/asg4-client-server/misc/>https://www2.ucsc.edu/courses/cse111-wm/:/Assignments/asg4-client-server/misc/</A>
+</DIV>
+</BODY>

@@ -1,0 +1,201 @@
+head	1.8;
+access;
+symbols;
+locks;
+comment	@// @;
+
+
+1.8
+date	2020.12.06.21.36.36;	author -;	state -;
+branches;
+next	1.7;
+
+1.7
+date	2020.12.06.21.35.15;	author -;	state -;
+branches;
+next	1.6;
+
+1.6
+date	2020.12.06.21.34.56;	author -;	state -;
+branches;
+next	1.5;
+
+1.5
+date	2020.12.06.21.25.01;	author -;	state -;
+branches;
+next	1.4;
+
+1.4
+date	2020.12.06.21.24.45;	author -;	state -;
+branches;
+next	1.3;
+
+1.3
+date	2020.12.06.21.24.25;	author -;	state -;
+branches;
+next	1.2;
+
+1.2
+date	2020.12.06.21.23.30;	author -;	state -;
+branches;
+next	1.1;
+
+1.1
+date	2020.12.06.21.22.42;	author -;	state -;
+branches;
+next	;
+
+
+desc
+@@
+
+
+1.8
+log
+@-
+@
+text
+@// $Id: netbytes.cpp,v 1.7 2020-12-06 13:35:15-08 - - $
+
+//
+// NAME
+//    netbytes - print host and network byte order
+//
+// SYNOPSIS
+//    netbytes  number...
+//
+// DESCRIPTION
+//    Prints the number as input and unit32_t byte swapped.
+//
+
+#include <cstdint>
+#include <iomanip>
+#include <iostream>
+#include <utility>
+using namespace std;
+
+#include <libgen.h>
+
+union bytes {
+   uint32_t value;
+   char chars[4];
+};
+
+ostream& operator<< (ostream& out, const bytes& arg) {
+   out << "0x" << uppercase
+       << hex << setfill('0') << setw(8) << arg.value << " "
+       << dec << setfill(' ') << setw(10) << arg.value;
+   return out;
+}
+
+int main (int argc, char** argv) {
+   string execname = basename (argv[0]);
+   for (char** argp = &argv[1]; argp != &argv[argc]; ++argp) {
+      try {
+         bytes input, swapped;
+         input.value = stol (*argp);
+         swapped.value = input.value;
+         swap (swapped.chars[0], swapped.chars[3]);
+         swap (swapped.chars[1], swapped.chars[2]);
+         cout << input << " => " << swapped << endl;
+      }catch (invalid_argument& error) {
+         cerr << execname << ": " << *argp << ": " << error.what()
+              << " invalid argument" << endl;
+      }
+   }
+}
+@
+
+
+1.7
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: netbytes.cpp,v 1.5 2020-12-06 13:25:01-08 - - $
+d46 1
+a46 1
+              << endl;
+@
+
+
+1.6
+log
+@-
+@
+text
+@d20 2
+@
+
+
+1.5
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id: netbytes.cpp,v 1.1 2020-12-06 13:22:42-08 - - $
+d33 1
+d35 11
+a45 6
+      bytes input, swapped;
+      input.value = stol (*argp);
+      swapped.value = input.value;
+      swap (swapped.chars[0], swapped.chars[3]);
+      swap (swapped.chars[1], swapped.chars[2]);
+      cout << input << " => " << swapped << endl;
+@
+
+
+1.4
+log
+@-
+@
+text
+@d39 1
+a39 1
+      cout << value << " => " << swapped << endl;
+@
+
+
+1.3
+log
+@-
+@
+text
+@d25 1
+a25 1
+ostream& ostream<< (ostream& out, const bytes& arg) {
+@
+
+
+1.2
+log
+@-
+@
+text
+@d25 1
+a25 1
+ostream& print (ostream& out, const bytes& arg) {
+d39 1
+a39 1
+      cout << print (value) << " => " << print (swapped) << endl;
+@
+
+
+1.1
+log
+@-
+@
+text
+@d1 1
+a1 1
+// $Id$
+d37 2
+a38 2
+      swap (&swapped.chars[0], &swapped.chars[3]);
+      swap (&swapped.chars[1], &swapped.chars[2]);
+@

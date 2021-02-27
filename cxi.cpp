@@ -1,6 +1,7 @@
 // $Id: cxi.cpp,v 1.1 2020-11-22 16:51:43-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <memory>
 #include <string>
@@ -24,6 +25,7 @@ unordered_map<string,cxi_command> command_map {
    {"help", cxi_command::HELP},
    {"ls"  , cxi_command::LS  },
    {"rm"  , cxi_command::RM  },
+   {"get" , cxi_command::GET },
 };
 
 static const char help[] = R"||(
@@ -63,8 +65,6 @@ void cxi_rm (client_socket& server, string& filename) {
    cxi_header header;
    header.command = cxi_command::RM;
    strcpy(header.filename, filename.c_str());
-   //for (uint i = filename.length();i!= FILENAME_SIZE - 1;++i) header.filename[i] = 0;
-   //header.filename[FILENAME_SIZE] = '\0';
    outlog << "sending header " << header << endl;
    send_packet (server, &header, sizeof header);
    recv_packet (server, &header, sizeof header);
@@ -76,6 +76,29 @@ void cxi_rm (client_socket& server, string& filename) {
       outlog << "foo was deleted by server" << endl;
    }
 }
+
+void cxi_get (client_socket& server, string& filename) {
+   cxi_header header;
+   header.command = cxi_command::GET;
+   strcpy(header.filename, filename.c_str());
+   outlog << "sending header " << header << endl;
+   send_packet (server, &header, sizeof header);
+   recv_packet (server, &header, sizeof header);
+   outlog << "received header " << header << endl;
+   if (header.command != cxi_command::FILEOUT) {
+      outlog << "sent GET, server did not return FILEOUT" << endl;
+      outlog << "server returned " << header << endl;
+   }else {
+      size_t host_nbytes = ntohl (header.nbytes);
+      auto buffer = make_unique<char[]> (host_nbytes + 1);
+      recv_packet (server, buffer.get(), host_nbytes);
+      outlog << "received " << host_nbytes << " bytes" << endl;
+      //buffer[host_nbytes] = '\0';
+      ofstream file(filename);
+      file << buffer.get();
+   }
+}
+
 
 
 
@@ -126,6 +149,9 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::RM:
                cxi_rm (server, result[1]);
+               break;
+            case cxi_command::GET:
+               cxi_get (server, result[1]);
                break;
             default:
                outlog << line << ": invalid command" << endl;

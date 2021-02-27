@@ -1,6 +1,7 @@
 // $Id: cxid.cpp,v 1.3 2020-12-12 22:09:29-08 - - $
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 using namespace std;
@@ -63,6 +64,38 @@ void reply_rm (accepted_socket& client_sock, cxi_header& header) {
    outlog << "header sent " << endl;
 }
 
+void reply_get (accepted_socket& client_sock, cxi_header& header) {
+    ifstream file (header.filename, ifstream::binary);
+    if (file) {
+        // get length of file:
+        file.seekg (0, file.end);
+        int length = file.tellg();
+        file.seekg (0, file.beg);
+
+        outlog << header.filename << " is being read" << endl;
+        char * buffer = new char [length];
+        file.read (buffer,length);
+        if(file){
+           outlog << header.filename << " is read" << endl;
+           file.close();
+           header.command = cxi_command::FILEOUT;
+           header.nbytes = htonl (length);
+           outlog << "sending header " << header << endl;
+           send_packet (client_sock, &header, sizeof header);
+           send_packet (client_sock, buffer, length);
+           outlog << "sent " << length << " bytes" << endl;
+           return;
+        }
+    }
+       outlog << "get " << header.filename << ": " << strerror (errno) << endl;
+       header.command = cxi_command::NAK;
+       header.nbytes = htonl (errno);
+       send_packet (client_sock, &header, sizeof header);
+       return;
+}
+
+
+
 void run_server (accepted_socket& client_sock) {
    outlog.execname (outlog.execname() + "*");
    outlog << "connected to " << to_string (client_sock) << endl;
@@ -77,6 +110,9 @@ void run_server (accepted_socket& client_sock) {
                break;
             case cxi_command::RM:
                reply_rm (client_sock, header);
+               break;
+            case cxi_command::GET:
+               reply_get (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;

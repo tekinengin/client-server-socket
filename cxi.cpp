@@ -26,6 +26,7 @@ unordered_map<string,cxi_command> command_map {
    {"ls"  , cxi_command::LS  },
    {"rm"  , cxi_command::RM  },
    {"get" , cxi_command::GET },
+   {"put" , cxi_command::PUT },
 };
 
 static const char help[] = R"||(
@@ -99,6 +100,44 @@ void cxi_get (client_socket& server, string& filename) {
    }
 }
 
+void cxi_put (client_socket& server, string& filename) {
+   cxi_header header;
+   ifstream file (filename, ifstream::binary);
+   if (file) {
+        // get length of file:
+        file.seekg (0, file.end);
+        int length = file.tellg();
+        file.seekg (0, file.beg);
+
+        outlog << filename << " is being read" << endl;
+        char * buffer = new char [length];
+        file.read (buffer,length);
+        if(file){
+           outlog << filename << " is read" << endl;
+           file.close();
+           header.command = cxi_command::PUT;
+           strcpy(header.filename, filename.c_str());
+           header.nbytes = htonl (length);
+           outlog << "sending header " << header << endl;
+           send_packet (server, &header, sizeof header);
+           send_packet (server, buffer, length);
+           outlog << "sent " << length << " bytes" << endl;
+           recv_packet (server, &header, sizeof header);
+           outlog << "received header " << header << endl;
+
+           if(header.command != cxi_command::ACK){
+              outlog << "sent PUT, server did not return ACK" << endl;
+              outlog << "server returned " << header << endl;
+           }else{
+              outlog << "file was successfuly sent" << endl;
+           }
+           return;
+        }
+   }
+   outlog << "put " << header.filename << ": " << strerror (errno) << endl;
+   return;
+}
+
 
 
 
@@ -152,6 +191,9 @@ int main (int argc, char** argv) {
                break;
             case cxi_command::GET:
                cxi_get (server, result[1]);
+               break;
+            case cxi_command::PUT:
+               cxi_put (server, result[1]);
                break;
             default:
                outlog << line << ": invalid command" << endl;

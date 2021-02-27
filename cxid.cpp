@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <memory>
 using namespace std;
 
 #include <libgen.h>
@@ -87,12 +88,33 @@ void reply_get (accepted_socket& client_sock, cxi_header& header) {
            return;
         }
     }
-       outlog << "get " << header.filename << ": " << strerror (errno) << endl;
-       header.command = cxi_command::NAK;
-       header.nbytes = htonl (errno);
-       send_packet (client_sock, &header, sizeof header);
-       return;
+    outlog << "get " << header.filename << ": " << strerror (errno) << endl;
+    header.command = cxi_command::NAK;
+    header.nbytes = htonl (errno);
+    send_packet (client_sock, &header, sizeof header);
+    outlog << "header sent " << endl;
+    return;
 }
+
+void reply_put (accepted_socket& client_sock, cxi_header& header) {
+    ofstream file (header.filename, ifstream::binary);
+    size_t host_nbytes = ntohl (header.nbytes);
+    auto buffer = make_unique<char[]> (host_nbytes + 1);
+    recv_packet (client_sock, buffer.get(), host_nbytes);
+    outlog << "received " << host_nbytes << " bytes" << endl;
+    buffer[host_nbytes] = '\0';
+    file << buffer.get();
+    outlog << header.filename << " is created" << endl;
+    file.close();
+
+    header.command = cxi_command::ACK;
+    header.nbytes = htonl (0);
+    send_packet (client_sock, &header, sizeof header);
+    outlog << "header sent " << endl;
+    return;
+}
+
+
 
 
 
@@ -113,6 +135,9 @@ void run_server (accepted_socket& client_sock) {
                break;
             case cxi_command::GET:
                reply_get (client_sock, header);
+               break;
+            case cxi_command::PUT:
+               reply_put (client_sock, header);
                break;
             default:
                outlog << "invalid client header:" << header << endl;
